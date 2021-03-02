@@ -25,20 +25,16 @@ FTP_PASS='philippe'
 LOG='/home/philippe/FTP/Sauvegarde-FTP'.$NOW
 
 function backup() {
-	#Si le répertoire de sauvegarde local n'existe pas, il sera créé
-	if [! -d $BACKUP_DIR ]; then
-		mkdir $BACKUP_DIR && cd $BACKUP_DIR
-	fi
 
 	echo "Début de la sauvegarde le $NOW à `date +%HH%M`" > $LOG
 	
 	# Création de l'archive et du dump MySQL
 	echo "Compression des dossiers débutée à `date +%HH%M`" >> $LOG
-	tar -cvf $BACKUP_DIR/$FILE --transform $WWW_TRANSFORM $WWW_DIR
+	sudo tar -cvf $BACKUP_DIR/$FILE --transform $WWW_TRANSFORM $WWW_DIR
 	mysqldump -u$DB_USER -p$DB_PASS $DB_NAME --no-tablespaces > $BACKUP_DIR/$DB_FILE
 
 	# Ajout du dump à cette archive, suppression du dump et compression du tout
-	tar --append --file=$BACKUP_DIR/$FILE --transform $DB_TRANSFORM $BACKUP_DIR/$DB_FILE
+	sudo tar --append --file=$BACKUP_DIR/$FILE --transform $DB_TRANSFORM $BACKUP_DIR/$DB_FILE
 	rm $BACKUP_DIR/$DB_FILE
 	gzip -9 $BACKUP_DIR/$FILE
 
@@ -53,17 +49,19 @@ function backup() {
 # Destination
 
 DESTINATION='/home/philippe/backups'
-RETENTION=
 function send() {
 	echo "Envoi des fichiers sur le serveur FTP à `date +%HH%M`" >> $LOG
 
 	# Envoi de la sauvegarde locale vers le serveur FTP
 	lftp ftp://$FTP_USER:$FTP_PASS@$FTP_ADDRESS -e "mirror -e -R $DESTINATION $BACKUP_DIR/$FILE;quit" >> $LOG
 
-	# Rotation des sauvegardes
-	lftp ftp://$FTP_USER:$FTP_PASS@$FTP_ADDRESS -e "cd backups;find . -cmin +1 -delete;quit"
-
 	echo "Sauvegarde terminée le `date +%d-%M-%Y` à `date +%HH%M`" >> $LOG
+}
+
+function rotate() {
+	# Rotation des sauvegardes
+#	lftp ftp://$FTP_USER:$FTP_PASS@$FTP_ADDRESS -e cd /home/philippe/scripts; rotate.sh;quit"
+	ssh $FTP_USER:$FTP_PASS@$FTP_ADDRESS 'cd /home/philippe/scripts && ./rotate.sh'
 }
 
 # Dossier Backups local clean
@@ -74,4 +72,5 @@ function clean() {
 
 backup
 send
+rotate
 clean
