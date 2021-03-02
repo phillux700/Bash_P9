@@ -17,7 +17,6 @@ DB_TRANSFORM='s,^home/philippe/backups,www/database,'
 # Informations sur le serveur FTP
 FTP_ADDRESS='192.168.2.4'
 FTP_USER='philippe'
-FTP_PASS='philippe'
 
 # Emplacement des logs
 LOG='/home/philippe/FTP/Sauvegarde-FTP'.$NOW
@@ -29,7 +28,6 @@ function backup() {
 	# Création de l'archive et du dump MySQL
 	echo "Compression des dossiers débutée à `date +%HH%M`" >> $LOG
 	sudo tar -cvf $BACKUP_DIR/$FILE --transform $WWW_TRANSFORM $WWW_DIR
-	#mysqldump -u$DB_USER -p$DB_PASS $DB_NAME --no-tablespaces > $BACKUP_DIR/$DB_FILE
 	mysqldump --defaults-extra-file=/etc/mysql/mysql-backup-script.cnf --no-tablespaces $DB_NAME > $BACKUP_DIR/$DB_FILE
 
 	# Ajout du dump à cette archive, suppression du dump et compression du tout
@@ -52,8 +50,8 @@ function send() {
 	echo "Envoi des fichiers sur le serveur FTP à `date +%HH%M`" >> $LOG
 
 	# Envoi de la sauvegarde locale vers le serveur FTP
-	lftp ftp://$FTP_USER:$FTP_PASS@$FTP_ADDRESS -e "mirror -e -R $DESTINATION $BACKUP_DIR/$FILE;quit" >> $LOG
-
+	sftp $FTP_USER@$FTP_ADDRESS:$DESTINATION <<< $'put /home/philippe/backups/*'
+	
 	echo "Sauvegarde terminée le `date +%d-%M-%Y` à `date +%HH%M`" >> $LOG
 }
 
