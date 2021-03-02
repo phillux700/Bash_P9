@@ -50,5 +50,28 @@ function backup() {
 	esac
 }
 
+# Destination
+
+DESTINATION='/home/philippe/backups'
+RETENTION=
+function send() {
+	echo "Envoi des fichiers sur le serveur FTP à `date +%HH%M`" >> $LOG
+
+	# Envoi de la sauvegarde locale vers le serveur FTP
+	lftp ftp://$FTP_USER:$FTP_PASS@$FTP_ADDRESS -e "mirror -e -R $DESTINATION $BACKUP_DIR/$FILE;quit" >> $LOG
+
+	# Rotation des sauvegardes
+	lftp ftp://$FTP_USER:$FTP_PASS@$FTP_ADDRESS -e "cd backups;find . -cmin +1 -delete;quit"
+
+	echo "Sauvegarde terminée le `date +%d-%M-%Y` à `date +%HH%M`" >> $LOG
+}
+
+# Dossier Backups local clean
+function clean() {
+	rm $BACKUP_DIR/*
+	echo "Dossier Backup local nettoyé à `date +%HH%M`" >> $LOG
+}
 
 backup
+send
+clean
