@@ -21,13 +21,13 @@ function extract() {
 }
 
 function restore() {
-	ssh $FTP_USER@$FTP_ADDRESS #mysql -u philippe db_wordpress < /home/philippe/tmp/www/database/*.sql'
-	ssh $FTP_USER@$FTP_ADDRESS rm -R /home/philippe/tmp/www/database'
-	ssh $FTP_USER@$FTP_ADDRESS cp /home/philippe/tmp/www/* /var/www/wordpress/ -R'
+	ssh $FTP_USER@$FTP_ADDRESS 'mysql -u philippe db_wordpress < /home/philippe/tmp/www/database/*.sql'
+	ssh $FTP_USER@$FTP_ADDRESS 'rm -R /home/philippe/tmp/www/database'
+	ssh $FTP_USER@$FTP_ADDRESS 'cp /home/philippe/tmp/www/* /var/www/wordpress/ -R;chmod -R 755 /var/www/wordpress/*'
 }
 
 function clean() {
-	ssh $FTP_USER@$FTP_ADDRESS 'rm -R /home/philippe/tmp/*'
+	ssh $FTP_USER@$FTP_ADDRESS 'rm -R /home/philippe/tmp/*;exit'
 }
 
 send
